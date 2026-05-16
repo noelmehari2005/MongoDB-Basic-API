@@ -1,0 +1,8 @@
+{
+  "name": "Products API MongoDB Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [3000, 27017],
+  "postCreateCommand": "npm install && node --version && npm --version && mongosh --version"
+}

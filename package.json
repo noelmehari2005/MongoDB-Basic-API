@@ -1,0 +1,16 @@
+{
+  "name": "products-api",
+  "version": "1.0.0",
+  "description": "Node + Express + MongoDB products API for CSC 3221 MongoDB activities",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0"
+  }
+}
