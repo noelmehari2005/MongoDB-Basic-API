@@ -11,7 +11,7 @@
 /api/products: <img width="1440" height="900" alt="Screenshot 2026-05-15 at 8 44 13 PM" src="https://github.com/user-attachments/assets/0d3892a9-cfe0-43dc-8314-9bbe6f458531" />
 
 
-/api/products?minPrice=50&maxPrice=200: <img width="1440" height="900" alt="Screenshot 2026-05-15 at 8 56 59 PM" src="https://github.com/user-attachments/assets/5215dd2e-d2a7-44dc-8af4-c405d57fb7f0" />
+/api/products?minPrice=15&maxPrice=200: <img width="1440" height="900" alt="Screenshot 2026-05-15 at 8 56 59 PM" src="https://github.com/user-attachments/assets/5215dd2e-d2a7-44dc-8af4-c405d57fb7f0" />
 
 /api/products/:id: <img width="1440" height="900" alt="Screenshot 2026-05-15 at 8 58 08 PM" src="https://github.com/user-attachments/assets/c9d349c3-2f08-465f-8b6a-c05c771d15dc" />
 
