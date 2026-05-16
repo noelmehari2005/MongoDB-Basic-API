@@ -14,13 +14,24 @@ async function ConnectToDatabase() {
   }
 
   client = new MongoClient(uri);
+
   await client.connect();
 
   const db = client.db(dbName);
+
   collection = db.collection(collectionName);
 
-  await collection.createIndex({ name: 1 }, { unique: true });
-  await collection.createIndex({ warehouse: 1 });
+  await collection.createIndex(
+    { title: 1 },
+    {
+      unique: true,
+      partialFilterExpression: {
+        title: { $exists: true }
+      }
+    }
+  );
+
+  await collection.createIndex({ author: 1 });
 
   return collection;
 }
@@ -29,6 +40,7 @@ function ToObjectId(id) {
   if (!ObjectId.isValid(id)) {
     return null;
   }
+
   return new ObjectId(id);
 }
 

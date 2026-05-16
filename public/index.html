@@ -8,14 +8,14 @@
 </head>
 <body>
   <main class="container">
-    <h1>Products API</h1>
-    <p>This page reads products from <code>/api/products</code> and lets you add a product.</p>
+    <h1>Books API</h1>
+    <p>This page reads books from <code>/api/books</code> and lets you add a book.</p>
 
     <form id="product-form">
-      <input name="name" placeholder="Name" required>
+      <input name="title" placeholder="Title" required>
+      <input name="author" placeholder="Author" required>
       <input name="price" type="number" step="0.01" min="0" placeholder="Price" required>
-      <input name="quantity" type="number" min="0" step="1" placeholder="Quantity" required>
-      <input name="warehouse" placeholder="Warehouse" maxlength="1" required>
+      <input name="year" type="number" step="1" placeholder="Year" required>
       <button type="submit">Add Product</button>
     </form>
 
@@ -23,10 +23,10 @@
     <table>
       <thead>
         <tr>
-          <th>Name</th>
+          <th>Title</th>
+          <th>Author</th>
           <th>Price</th>
-          <th>Quantity</th>
-          <th>Warehouse</th>
+          <th>Year</th>
         </tr>
       </thead>
       <tbody id="products-body"></tbody>

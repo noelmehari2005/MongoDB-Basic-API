@@ -5,7 +5,7 @@ async function Seed() {
   const collection = await ConnectToDatabase();
   await collection.deleteMany({});
   const result = await collection.insertMany(products);
-  console.log(`Inserted ${result.insertedCount} products.`);
+  console.log(`Inserted ${result.insertedCount} books.`);
 }
 
 Seed()
@@ -14,3 +14,5 @@ Seed()
     process.exitCode = 1;
   })
   .finally(CloseDatabase);
+
+  

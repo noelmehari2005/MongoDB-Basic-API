@@ -13,69 +13,102 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 function BuildProductQuery(query) {
   const filter = {};
 
-  if (query.warehouse) {
-    filter.warehouse = query.warehouse.toUpperCase();
+  if (query.title) {
+    filter.title = { $regex: query.title, $options: 'i' };
   }
 
-  if (query.name) {
-    filter.name = { $regex: query.name, $options: 'i' };
+  if (query.author) {
+    filter.author = { $regex: query.author, $options: 'i' };
   }
 
   if (query.minPrice || query.maxPrice) {
     filter.price = {};
-    if (query.minPrice) filter.price.$gte = Number(query.minPrice);
-    if (query.maxPrice) filter.price.$lte = Number(query.maxPrice);
+
+    if (query.minPrice) {
+      filter.price.$gte = Number(query.minPrice);
+    }
+
+    if (query.maxPrice) {
+      filter.price.$lte = Number(query.maxPrice);
+    }
   }
 
-  if (query.minQuantity || query.maxQuantity) {
-    filter.quantity = {};
-    if (query.minQuantity) filter.quantity.$gte = Number(query.minQuantity);
-    if (query.maxQuantity) filter.quantity.$lte = Number(query.maxQuantity);
+  if (query.minYear || query.maxYear) {
+    filter.year = {};
+
+    if (query.minYear) {
+      filter.year.$gte = Number(query.minYear);
+    }
+
+    if (query.maxYear) {
+      filter.year.$lte = Number(query.maxYear);
+    }
   }
 
   return filter;
 }
 
 function ValidateProduct(product) {
-  if (!product.name || typeof product.name !== 'string') {
-    return 'Product name is required.';
+  if (!product.title || typeof product.title !== 'string') {
+    return 'Book title is required.';
   }
-  if (typeof product.price !== 'number' || product.price < 0) {
-    return 'Product price must be a non-negative number.';
+
+  if (!product.author || typeof product.author !== 'string') {
+    return 'Author is required.';
   }
-  if (!Number.isInteger(product.quantity) || product.quantity < 0) {
-    return 'Product quantity must be a non-negative integer.';
+
+  if (typeof product.price !== 'number' || Number.isNaN(product.price) || product.price < 0) {
+    return 'Price must be a non-negative number.';
   }
-  if (!product.warehouse || typeof product.warehouse !== 'string') {
-    return 'Product warehouse is required.';
+
+  if (!Number.isInteger(product.year)) {
+    return 'Year must be an integer.';
   }
+
   return null;
 }
 
 app.get('/api/health', async (request, response) => {
   const collection = await ConnectToDatabase();
   const count = await collection.countDocuments();
-  response.json({ status: 'ok', database: process.env.DB_NAME, products: count });
+
+  response.json({
+    status: 'ok',
+    database: process.env.DB_NAME,
+    books: count
+  });
 });
 
 app.get('/api/products', async (request, response) => {
   const collection = await ConnectToDatabase();
+
   const filter = BuildProductQuery(request.query);
-  const products = await collection.find(filter).sort({ name: 1 }).toArray();
+
+  const products = await collection
+    .find(filter)
+    .sort({ title: 1 })
+    .toArray();
+
   response.json(products);
 });
 
 app.get('/api/products/:id', async (request, response) => {
   const id = ToObjectId(request.params.id);
+
   if (!id) {
-    return response.status(400).json({ error: 'Invalid product id.' });
+    return response.status(400).json({
+      error: 'Invalid product id.'
+    });
   }
 
   const collection = await ConnectToDatabase();
+
   const product = await collection.findOne({ _id: id });
 
   if (!product) {
-    return response.status(404).json({ error: 'Product not found.' });
+    return response.status(404).json({
+      error: 'Book not found.'
+    });
   }
 
   response.json(product);
@@ -83,48 +116,62 @@ app.get('/api/products/:id', async (request, response) => {
 
 app.post('/api/products', async (request, response) => {
   const product = {
-    name: request.body.name,
+    title: request.body.title,
+    author: request.body.author,
     price: Number(request.body.price),
-    quantity: Number(request.body.quantity),
-    warehouse: String(request.body.warehouse || '').toUpperCase()
+    year: Number(request.body.year)
   };
 
   const error = ValidateProduct(product);
+
   if (error) {
     return response.status(400).json({ error });
   }
 
   try {
     const collection = await ConnectToDatabase();
+
     const result = await collection.insertOne(product);
-    response.status(201).json({ ...product, _id: result.insertedId });
+
+    response.status(201).json({
+      ...product,
+      _id: result.insertedId
+    });
   } catch (error) {
     if (error.code === 11000) {
-      return response.status(409).json({ error: 'A product with this name already exists.' });
+      return response.status(409).json({
+        error: 'A book with this title already exists.'
+      });
     }
+
     throw error;
   }
 });
 
 app.put('/api/products/:id', async (request, response) => {
   const id = ToObjectId(request.params.id);
+
   if (!id) {
-    return response.status(400).json({ error: 'Invalid product id.' });
+    return response.status(400).json({
+      error: 'Invalid product id.'
+    });
   }
 
   const product = {
-    name: request.body.name,
+    title: request.body.title,
+    author: request.body.author,
     price: Number(request.body.price),
-    quantity: Number(request.body.quantity),
-    warehouse: String(request.body.warehouse || '').toUpperCase()
+    year: Number(request.body.year)
   };
 
   const error = ValidateProduct(product);
+
   if (error) {
     return response.status(400).json({ error });
   }
 
   const collection = await ConnectToDatabase();
+
   const result = await collection.findOneAndUpdate(
     { _id: id },
     { $set: product },
@@ -132,7 +179,9 @@ app.put('/api/products/:id', async (request, response) => {
   );
 
   if (!result) {
-    return response.status(404).json({ error: 'Product not found.' });
+    return response.status(404).json({
+      error: 'Book not found.'
+    });
   }
 
   response.json(result);
@@ -140,19 +189,33 @@ app.put('/api/products/:id', async (request, response) => {
 
 app.patch('/api/products/:id', async (request, response) => {
   const id = ToObjectId(request.params.id);
+
   if (!id) {
-    return response.status(400).json({ error: 'Invalid product id.' });
+    return response.status(400).json({
+      error: 'Invalid product id.'
+    });
   }
 
   const updates = {};
-  if (request.body.name !== undefined) updates.name = request.body.name;
-  if (request.body.price !== undefined) updates.price = Number(request.body.price);
-  if (request.body.quantity !== undefined) updates.quantity = Number(request.body.quantity);
-  if (request.body.warehouse !== undefined) updates.warehouse = String(request.body.warehouse).toUpperCase();
-  if (request.body.status !== undefined) updates.status = request.body.status;
-  if (request.body.reorderNeeded !== undefined) updates.reorderNeeded = Boolean(request.body.reorderNeeded);
+
+  if (request.body.title !== undefined) {
+    updates.title = request.body.title;
+  }
+
+  if (request.body.author !== undefined) {
+    updates.author = request.body.author;
+  }
+
+  if (request.body.price !== undefined) {
+    updates.price = Number(request.body.price);
+  }
+
+  if (request.body.year !== undefined) {
+    updates.year = Number(request.body.year);
+  }
 
   const collection = await ConnectToDatabase();
+
   const result = await collection.findOneAndUpdate(
     { _id: id },
     { $set: updates },
@@ -160,7 +223,9 @@ app.patch('/api/products/:id', async (request, response) => {
   );
 
   if (!result) {
-    return response.status(404).json({ error: 'Product not found.' });
+    return response.status(404).json({
+      error: 'Book not found.'
+    });
   }
 
   response.json(result);
@@ -168,15 +233,21 @@ app.patch('/api/products/:id', async (request, response) => {
 
 app.delete('/api/products/:id', async (request, response) => {
   const id = ToObjectId(request.params.id);
+
   if (!id) {
-    return response.status(400).json({ error: 'Invalid product id.' });
+    return response.status(400).json({
+      error: 'Invalid product id.'
+    });
   }
 
   const collection = await ConnectToDatabase();
+
   const result = await collection.deleteOne({ _id: id });
 
   if (result.deletedCount === 0) {
-    return response.status(404).json({ error: 'Product not found.' });
+    return response.status(404).json({
+      error: 'Book not found.'
+    });
   }
 
   response.status(204).send();
@@ -184,11 +255,14 @@ app.delete('/api/products/:id', async (request, response) => {
 
 app.use((error, request, response, next) => {
   console.error(error);
-  response.status(500).json({ error: 'Server error.' });
+
+  response.status(500).json({
+    error: 'Server error.'
+  });
 });
 
 const server = app.listen(port, () => {
-  console.log(`Products API running on http://localhost:${port}`);
+  console.log(`Books API running on http://localhost:${port}`);
 });
 
 process.on('SIGTERM', async () => {
